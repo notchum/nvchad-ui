@@ -12,6 +12,16 @@ local function buf_index(bufnr)
   end
 end
 
+local function get_pinned_bufs()
+  local pinned_buffs = {}
+  for _, bufnr in ipairs(vim.t.bufs) do
+    if vim.api.nvim_buf_get_var(bufnr, "pinned") then
+      table.insert(pinned_buffs, bufnr)
+    end
+  end
+  return pinned_buffs
+end
+
 M.next = function()
   local bufs = vim.t.bufs
   local curbufIndex = buf_index(cur_buf())
@@ -102,6 +112,16 @@ M.closeBufs_at_direction = function(x)
   end
 end
 
+-- closes all buffers that aren't pinned
+M.closeNonPinnedBufs = function()
+  local pbufs = get_pinned_bufs()
+  if next(pbufs) == nil then
+    return
+  end
+  M.goto_buf(pbufs[#pbufs])
+  M.closeBufs_at_direction "right"
+end
+
 M.move_buf = function(n)
   local bufs = vim.t.bufs
 
@@ -138,6 +158,36 @@ M.goto_buf = function(bufnr)
   end
 
   api.nvim_set_current_buf(bufnr)
+end
+
+M.pin_buf = function(bufnr)
+  local bufinx = buf_index(bufnr)
+
+  if not bufinx or api.nvim_buf_get_var(bufnr, "pinned") then
+    return
+  end
+
+  local pbufs = get_pinned_bufs()
+  local nmoves = bufinx - (#pbufs + 1)
+  for _ = 1, nmoves do
+    M.move_buf(-1)
+  end
+  api.nvim_buf_set_var(bufnr, "pinned", true)
+end
+
+M.unpin_buf = function(bufnr)
+  local bufinx = buf_index(bufnr)
+
+  if not bufinx or not api.nvim_buf_get_var(bufnr, "pinned") then
+    return
+  end
+
+  local pbufs = get_pinned_bufs()
+  local nmoves = #pbufs - bufinx
+  for _ = 1, nmoves do
+    M.move_buf(1)
+  end
+  api.nvim_buf_set_var(bufnr, "pinned", false)
 end
 
 return M

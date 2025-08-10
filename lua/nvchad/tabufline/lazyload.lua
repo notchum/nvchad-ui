@@ -3,6 +3,7 @@ local api = vim.api
 local get_opt = api.nvim_get_option_value
 local cur_buf = api.nvim_get_current_buf
 local autocmd = vim.api.nvim_create_autocmd
+local usercmd = vim.api.nvim_create_user_command
 
 -- store listed buffers in tab l
 vim.t.bufs = vim.t.bufs
@@ -83,4 +84,10 @@ autocmd("FileType", {
   callback = function()
     vim.opt_local.buflisted = false
   end,
+})
+
+autocmd({"BufCreate","BufReadPost"}, {
+  callback = function(args)
+    vim.api.nvim_buf_set_var(args.buf, "pinned", false)
+  end
 })

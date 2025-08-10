@@ -51,6 +51,11 @@ M.style_buf = function(nr, i, w)
   local name = filename(buf_name(nr))
   name = name and (gen_unique_name(name, i) or name) or " No Name "
 
+  local pinicon = ""
+  if vim.api.nvim_buf_get_var(nr, "pinned") then
+    pinicon = "󰤱"
+  end
+
   if name ~= " No Name " then
     local devicon, devicon_hl = require("nvim-web-devicons").get_icon(name)
 
@@ -68,7 +73,7 @@ M.style_buf = function(nr, i, w)
   name = string.sub(name, 1, maxname_len - 2) .. (#name > maxname_len and ".." or "")
   name = M.txt(name, tbHlName)
 
-  name = strep(" ", pad - 1) .. (icon_hl .. icon .. name) .. strep(" ", pad - 1)
+  name = strep(" ", pad - 1) .. (pinicon .. icon_hl .. icon .. name) .. strep(" ", pad - 1)
 
   local close_btn = btn(" 󰅖 ", nil, "KillBuf", nr)
   name = btn(name, nil, "GoToBuf", nr)
